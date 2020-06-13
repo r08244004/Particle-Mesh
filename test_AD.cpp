@@ -1,9 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
 float ***buildGrid(int numRows, int numCols, int numLevels);
-void mass_deposition( int N, double *M, double *x, double *y, double *z, double gs, int GN, int mode, float ****M_grid);
+void acceleration_deposition( int N, float ***a_grid, double *x, double *y, double *z, double gs, int GN, int mode, double *a);
 
 int main(void){
     double gs = 1.0;
@@ -15,25 +14,25 @@ int main(void){
     y[1] = 2.2;
     z[1] = 0.8;
     int mode = 3;
-    float ***M_grid;
-     
-
-    mass_deposition(N, &M[N], &x[N], &y[N], &z[N], gs, GN, mode, &M_grid);
+    float ***a_grid = buildGrid(GN,GN,GN);
+    // Note we need to allocate a place to pass the 3-d function.
+    double a[N];
     
-    printf( "\nM_grid:\n" );
-    for(int k = 0; k<GN; k++){
-        printf( "k = %2d \n", k );
-        for(int i = 0; i<GN; i++){
-            for(int j = 0; j<GN; j++){
-                printf( "  %5.3f", M_grid[i][j][k] );
-            }
-            printf( "\n" );
-        }
+     for(int i = 0; i<GN; i++){
+         for(int j = 0; j<GN; j++){
+             for(int k = 0; k<GN; k++){
+                 a_grid[i][j][k] = 1.0;// provides the values a where we should give the value of real a when implementation.
+             }
+         }
+     }
+
+    acceleration_deposition(N, a_grid, x, y, z, gs, GN, mode, a);
+    
+    for(int n = 0; n<N; n++){
+        printf( "a[%2d] = %5.3f \n",n, a[n] );
     }
     return 0;
 }
-
-
 
 float ***buildGrid(int numRows, int numCols, int numLevels)
 {
@@ -57,7 +56,7 @@ float ***buildGrid(int numRows, int numCols, int numLevels)
     return levels;
 }
 
-void mass_deposition(int N, double *M, double *x, double *y, double *z, double gs, int GN, int mode, float ****M_grid)
+void acceleration_deposition( int N, float ***a_grid, double *x, double *y, double *z, double gs, int GN, int mode, double *a)
 {
 /*
  mode 1: NGP
@@ -66,22 +65,13 @@ void mass_deposition(int N, double *M, double *x, double *y, double *z, double g
  N is total number of particles.
  gs is grid size.
  GN is total grid number. Note that I assume we have a equilateral box.
- M_grid is the output matrix (a pointer) which gives allocated mass on every grid.
- M_grid has input of zero matrix.
+ a_grid is the input acceleration matrix.
+ a is output acceleration of one component for every particle. (a zero matrix pointer)
 */
-    double m[N][N][N][N]; //allocated mass for every single particle with m[particle][gridx][gridy][gridz]
-    double dx, dy, dz;
-    
-    *M_grid = buildGrid(GN,GN,GN);
-    // initialize M_grid
-    for(int i = 0; i<GN; i++){
-        for(int j = 0; j<GN; j++){
-            for(int k = 0; k<GN; k++){
-                (*M_grid)[i][j][k] = 0.0;
-            }
-        }
+    for(int n = 0; n<N; n++){
+        a[n] = 0.0;
     }
-    
+    double dx, dy, dz;
     if(mode == 1)
     {
         for(int n = 0; n<N; n++)
@@ -97,10 +87,8 @@ void mass_deposition(int N, double *M, double *x, double *y, double *z, double g
                         dz = fabs(z[n]-k*gs);
                         if(dx<=0.5*gs && dy<=0.5*gs && dz <=0.5*gs)
                         {
-                            m[n][i][j][k] = M[n];
+                           a[n] += a_grid[i][j][k];
                         }
-                        else m[n][i][j][k] = 0.0;
-                        (*M_grid)[i][j][k] += (float)m[n][i][j][k];
                     }
                 }
             }
@@ -121,10 +109,8 @@ void mass_deposition(int N, double *M, double *x, double *y, double *z, double g
                         dz = fabs(z[n]-k*gs);
                         if(dx<=gs && dy<=gs && dz<=gs)
                         {
-                            m[n][i][j][k] = (1.0-dx/gs)*(1.0-dy/gs)*(1.0-dz/gs)*M[n];
+                            a[n] += (1.0-dx/gs)*(1.0-dy/gs)*(1.0-dz/gs)*a_grid[i][j][k];
                         }
-                        else m[n][i][j][k] = 0.0;
-                        (*M_grid)[i][j][k] += (float)m[n][i][j][k];
                     }
                 }
             }
@@ -133,6 +119,7 @@ void mass_deposition(int N, double *M, double *x, double *y, double *z, double g
     if(mode == 3)
     {
         double wx, wy, wz; //weighted function
+        double ai; //
         for(int n = 0; n<N; n++)
         {
             for(int i = 0; i<GN; i++)
@@ -161,7 +148,7 @@ void mass_deposition(int N, double *M, double *x, double *y, double *z, double g
                     }
                     else wy = 0.0;
                     
-                    for(int k = 0; k<GN; k++)
+                    for(int k = 0; k<=GN; k++)
                     {
                         dz = fabs(z[n]-k*gs);
                         if(dz<=0.5*gs)
@@ -174,12 +161,12 @@ void mass_deposition(int N, double *M, double *x, double *y, double *z, double g
                         }
                         else wz = 0.0;
                         
-                        m[n][i][j][k] = wx*wy*wz*M[n];
-
-                        (*M_grid)[i][j][k] += (float)m[n][i][j][k];
+                        a[n] += wx*wy*wz*a_grid[i][j][k];
+                        
                     }
                 }
             }
         }
     }
 }
+

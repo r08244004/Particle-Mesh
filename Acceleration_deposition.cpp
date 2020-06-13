@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-void acceleration_deposition( double a_grid[N][N][N], double x[N], double y[N], double z[N], double gs, int GN,int N, int mode, double *a[N])
+void acceleration_deposition( int N, float ***a_grid, double *x, double *y, double *z, double gs, int GN, int mode, double *a)
 {
 /*
  mode 1: NGP
@@ -14,18 +14,21 @@ void acceleration_deposition( double a_grid[N][N][N], double x[N], double y[N], 
  a_grid is the input acceleration matrix.
  a is output acceleration of one component for every particle. (a zero matrix pointer)
 */
+    for(int n = 0; n<N; n++){
+        a[n] = 0.0;
+    }
     double dx, dy, dz;
     if(mode == 1)
     {
-        for(int n = 0; n<=N; n++)
+        for(int n = 0; n<N; n++)
         {
-            for(int i = 0; i<=GN; i++)
+            for(int i = 0; i<GN; i++)
             {
                 dx = fabs(x[n]-i*gs);
-                for(int j = 0; j<=GN; j++)
+                for(int j = 0; j<GN; j++)
                 {
                     dy = fabs(y[n]-j*gs);
-                    for(int k = 0; j<=GN; j++)
+                    for(int k = 0; k<GN; k++)
                     {
                         dz = fabs(z[n]-k*gs);
                         if(dx<=0.5*gs && dy<=0.5*gs && dz <=0.5*gs)
@@ -39,15 +42,15 @@ void acceleration_deposition( double a_grid[N][N][N], double x[N], double y[N], 
     }
     if(mode == 2)
     {
-        for(int n = 0; n<=N; n++)
+        for(int n = 0; n<N; n++)
         {
-            for(int i = 0; i<=GN; i++)
+            for(int i = 0; i<GN; i++)
             {
                 dx = fabs(x[n]-i*gs);
-                for(int j = 0; j<=GN; j++)
+                for(int j = 0; j<GN; j++)
                 {
                     dy = fabs(y[n]-j*gs);
-                    for(int k = 0; j<=GN; j++)
+                    for(int k = 0; k<GN; k++)
                     {
                         dz = fabs(z[n]-k*gs);
                         if(dx<=gs && dy<=gs && dz<=gs)
@@ -63,9 +66,9 @@ void acceleration_deposition( double a_grid[N][N][N], double x[N], double y[N], 
     {
         double wx, wy, wz; //weighted function
         double ai; //
-        for(int n = 0; n<=N; n++)
+        for(int n = 0; n<N; n++)
         {
-            for(int i = 0; i<=GN; i++)
+            for(int i = 0; i<GN; i++)
             {
                 dx = fabs(x[n]-i*gs);
                 if(dx<=0.5*gs)
@@ -78,7 +81,7 @@ void acceleration_deposition( double a_grid[N][N][N], double x[N], double y[N], 
                 }
                 else wx = 0.0;
                 
-                for(int j = 0; j<=GN; j++)
+                for(int j = 0; j<GN; j++)
                 {
                     dy = fabs(y[n]-j*gs);
                     if(dy<=0.5*gs)
@@ -89,9 +92,9 @@ void acceleration_deposition( double a_grid[N][N][N], double x[N], double y[N], 
                     {
                         wy = 0.5*(1.5-dy/gs)*(1.5-dy/gs);
                     }
-                    else wx = 0.0;
+                    else wy = 0.0;
                     
-                    for(int k = 0; j<=GN; j++)
+                    for(int k = 0; k<=GN; k++)
                     {
                         dz = fabs(z[n]-k*gs);
                         if(dz<=0.5*gs)

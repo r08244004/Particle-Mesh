@@ -40,6 +40,14 @@ void mass_deposition(int N, double *M, double *x, double *y, double *z, double g
     double dx, dy, dz;
     
     *M_grid = buildGrid(GN,GN,GN);
+    // initialize M_grid
+    for(int i = 0; i<GN; i++){
+        for(int j = 0; j<GN; j++){
+            for(int k = 0; k<GN; k++){
+                (*M_grid)[i][j][k] = 0.0;
+            }
+        }
+    }
     
     if(mode == 1)
     {
