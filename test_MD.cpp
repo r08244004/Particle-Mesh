@@ -2,6 +2,48 @@
 #include <stdlib.h>
 #include <math.h>
 
+float ***buildGrid(int numRows, int numCols, int numLevels);
+void mass_deposition( int N, double *M, double *x, double *y, double *z, double gs, int GN, int mode, float ****M_grid);
+
+int main(void){
+    double gs = 1.0;
+    int GN = 5;
+    int N = 1;
+    double M[N], x[N], y[N], z[N];
+    M[1] = 10.0;
+    x[1] = 1.3;
+    y[1] = 2.2;
+    z[1] = 0.8;
+    int mode = 3;
+    float ***M_grid;
+    
+    /*
+    for(int i = 0; i<=GN; i++){
+        for(int j = 0; j<=GN; j++){
+            for(int k = 0; k<=GN; k++){
+                M_grid[i][j][k] = 0.0;
+            }
+        }
+    }
+     */
+
+    mass_deposition(N, &M[N], &x[N], &y[N], &z[N], gs, GN, mode, &M_grid);
+    
+    printf( "\nM_grid:\n" );
+    for(int k = 0; k<GN; k++){
+        printf( "k = %2d \n", k );
+        for(int i = 0; i<GN; i++){
+            for(int j = 0; j<GN; j++){
+                printf( "  %5.3f", M_grid[i][j][k] );
+            }
+            printf( "\n" );
+        }
+    }
+    return 0;
+}
+
+
+
 float ***buildGrid(int numRows, int numCols, int numLevels)
 {
     float ***levels;
